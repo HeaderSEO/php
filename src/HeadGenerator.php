@@ -1,6 +1,8 @@
 <?php
 namespace webmonsterSEO;
 
+use webmonsterSEO\Tag;
+
 class HeadGenerator implements HeadGeneratorInterface {
 
     protected string    $language = 'en';
@@ -302,84 +304,111 @@ class HeadGenerator implements HeadGeneratorInterface {
      */
     public function render(): string
     {
-
-        $html = '<!DOCTYPE html>' . "\n";
-        $html .= '<html lang="' . $this->language . '">' . "\n";
-        $html .= '<head>' . "\n";
-        $html .= '    <meta charset="UTF-8">' . "\n";
-        $html .= $this->addContent('    <meta name="viewport" content="%s">', $this->viewport);
-        $html .= $this->addContent('    <meta name="language" content="%s">', $this->language);
-        $html .= $this->addContent('    <title>%s</title>', $this->title);
-        $html .= $this->addContent('    <meta name="description" content="%s">', $this->description);
-        $html .= $this->addContent('    <meta name="keywords" content="%s">', $this->keywords);
-        $html .= $this->addContent('    <meta name="author" content="%s">', $this->author);
-        $html .= $this->addContent('    <meta name="robots" content="%s">', $this->robots);
-        $html .= '    <meta name="robots" content="max-snippet:150, max-image-preview:large">'."\n";
-        $html .= $this->addContent('    <meta name="creation_date" content="%s">', $this->creationDate);
-        $html .= $this->addContent('    <meta name="last_modified" content="%s">', $this->lastModified);
-        $html .= $this->addContent('    <meta name="geo.position" content="%s">', $this->geoPosition);
-        $html .= $this->addContent('    <meta name="ICBM" content="%s">', $this->geoPosition);
-        $location = explode(",", $this->geoPosition);
-        $html .= $this->addContent('    <meta name="place:location:latitude" content="%s">', trim($location[0]));
-        $html .= $this->addContent('    <meta name="place:location:longitude" content="%s">', trim($location[1]));
-        $html .= $this->addContent('    <meta name="place:location:altitude" content="%s">', "1");
-        $html .= $this->addContent('    <meta name="place:location:accuracy" content="%s">', "100");
-        $html .= $this->addContent('    <meta property="business:contact_data:locality" content="%s">', $this->geoCity);
-        $html .= $this->addContent('    <meta property="business:contact_data:country_name" content="%s">', $this->geoCountry);
-        $html .= '    <meta name="referrer" content="no-referrer-when-downgrade">'."\n";
-        $html .= '    <meta name="format-detection" content="telephone=no">'."\n";
+        $location = array_map('trim', explode(",", $this->geoPosition));
 
         if(empty($this->canonicalUrl)){
             $this->canonicalUrl = $this->getCanonicalLink();
         }
-        $html .= '    <link rel="canonical" href="' . $this->canonicalUrl . '">'. "\n";
-        $html .= $this->addContent('    <link rel="sitemap" href="%s">', $this->sitemapUrl);
-        $html .= $this->addContent('    <link rel="icon" type="image/png" href="%s">', $this->faviconUrl);
-        $html .= $this->addContent('    <meta name="theme-color" content="%s">', $this->themeColor);
 
-        $html .= '    <meta property="og:type" content="website">'."\n";
-        $html .= $this->addContent('    <meta property="og:site_name" content="%s">', $this->siteName);
-        $html .= $this->addContent('    <meta property="og:title" content="%s">', $this->title);
-        $html .= $this->addContent('    <meta property="og:description" content="%s">', $this->description);
-        $html .= $this->addContent('    <meta property="og:url" content="%s">', $this->canonicalUrl);
-        $html .= $this->addContent('    <meta property="og:image" content="%s">', $this->fbImageUrl);
-        if(!empty($this->fbImageUrl)){
-            $html .= '    <meta property="og:image:width" content="1200">'."\n";
-            $html .= '    <meta property="og:image:height" content="630">'."\n";
+        $tags = [
+            new Tag\MetaCharset('UTF-8'),
+            $this->viewport ? new Tag\MetaName('viewport', $this->viewport) : null,
+            $this->language ? new Tag\MetaName('language', $this->language) : null,
+            $this->title ? new Tag\Title($this->title) : null,
+            $this->description ? new Tag\MetaName('description', $this->description) : null,
+            $this->keywords ? new Tag\MetaName('keywords', $this->keywords) : null,
+            $this->author? new Tag\MetaName('author', $this->author) : null,
+            $this->robots ? new Tag\MetaName('robots', $this->robots) : null,
+            new Tag\MetaName('robots', 'max-snippet:150, max-image-preview:large'),
+            $this->creationDate ? new Tag\MetaName('creation_date', $this->creationDate) : null,
+            $this->lastModified ? new Tag\MetaName('last_modified', $this->lastModified) : null,
+            $this->geoPosition ? new Tag\MetaName('geo.position', $this->geoPosition) : null,
+            $this->geoPosition ? new Tag\MetaName('ICBM', $this->geoPosition) : null,
+            $this->geoPosition ? new Tag\MetaName('place:location:latitude', $location[0]) : null,
+            $this->geoPosition ? new Tag\MetaName('place:location:longitude', $location[1]) : null,
+            $this->geoPosition ? new Tag\MetaName('place:location:altitude', '1') : null,
+            $this->geoPosition ? new Tag\MetaName('place:location:accuracy', '100') : null,
+            $this->geoCity ? new Tag\MetaProperty('business:contact_data:locality', $this->geoCity) : null,
+            $this->geoCountry ? new Tag\MetaProperty('business:contact_data:country_name', $this->geoCountry) : null,
+            new Tag\MetaName('referrer', 'no-referrer-when-downgrade'),
+            new Tag\MetaName('format-detection', 'telephone=no'),
+            new Tag\Link('canonical', $this->canonicalUrl),
+            $this->sitemapUrl ? new Tag\Link('sitemap', $this->sitemapUrl, 'application/xml') : null,
+            $this->faviconUrl ? new Tag\Link('icon', $this->faviconUrl,  'image/png') : null,
+            $this->themeColor ? new Tag\MetaName('theme-color', $this->themeColor) : null
+        ];
+
+        // OG tags
+        array_push(
+            $tags,
+            new Tag\MetaProperty('og:type', 'website'),
+            $this->siteName ? new Tag\MetaProperty('og:site_name', $this->siteName) : null,
+            $this->title ? new Tag\MetaProperty('og:title', $this->title) : null,
+            $this->description ? new Tag\MetaProperty('og:description', $this->description) : null,
+            $this->canonicalUrl ? new Tag\MetaProperty('og:url', $this->canonicalUrl) : null,
+            $this->fbImageUrl ? new Tag\MetaProperty('og:image', $this->fbImageUrl) : null
+        );
+
+        if(!empty($this->fbImageUrl)) {
+            array_push(
+                $tags,
+                new Tag\MetaProperty('og:image:width', '1200'),
+                new Tag\MetaProperty('og:image:height', '630')
+            );
         }
 
-        $html .= '    <meta name="twitter:card" content="summary_large_image">'."\n";
-        $html .= $this->addContent('    <meta name="twitter:title" content="%s">', $this->title);
-        $html .= $this->addContent('    <meta name="twitter:description" content="%s">', $this->description);
-        $html .= $this->addContent('    <meta name="twitter:image" content="%s">', $this->twitterImageUrl);
-        if(!empty($this->twitterImageUrl)){
-            $html .= '    <meta name="twitter:image:width" content="800">'."\n";
-            $html .= '    <meta name="twitter:image:height" content="400">'."\n";
+        array_push(
+            $tags,
+            new Tag\MetaName('twitter:card', 'summary_large_image'),
+            $this->title ? new Tag\MetaName('twitter:title', $this->title) : null,
+            $this->description ? new Tag\MetaName('twitter:description', $this->description) : null,
+            $this->twitterImageUrl ? new Tag\MetaName('twitter:image', $this->twitterImageUrl) : null
+        );
+
+        if(!empty($this->twitterImageUrl)) {
+            array_push(
+                $tags,
+                new Tag\MetaName('twitter:image:width', '800'),
+                new Tag\MetaName('twitter:image:height', '400')
+            );
         }
 
-        $html .= '    <meta property="og:whatsapp" content="share">'."\n";
-        $html .= $this->addContent('    <meta property="og:image:whatsapp" content="%s">', $this->whatsappImageUrl);
+        array_push(
+            $tags,
+            new Tag\MetaProperty('og:whatsapp', 'share'),
+            $this->whatsappImageUrl ? new Tag\MetaProperty('og:image:whatsapp', $this->whatsappImageUrl) : null
+        );
 
         // Add additional meta tags
         foreach ($this->metaTags as $meta) {
-            $html .= '    <meta name="' . $meta['name'] . '" content="' . $meta['content'] . '">' . "\n";
+            array_push($tags, new Tag\MetaName($meta['name'], $meta['content']));
         }
 
         // Add CSS links
         foreach ($this->styleSheetUrls as $url) {
-            $html .= '    <link rel="prefetch" href="' . $url . '">' . "\n";
-            $html .= '    <link rel="stylesheet" href="' . $url . '">' . "\n";
+            array_push(
+                $tags,
+                new Tag\Link('prefetch', $url),
+                new Tag\Link('stylesheet', $url)
+            );
         }
 
         // Add JS links
         foreach ($this->scriptUrls as $url) {
-            if(!empty($this->get_external_domain_url($url))){
-                $html .= '    <link rel="dns-prefetch" href="' . $this->get_external_domain_url($url) . '">' . "\n";
+            if(!empty($this->get_external_domain_url($url))) {
+                array_push($tags, new Tag\Link('dns-prefetch', $this->get_external_domain_url($url)));
             }
-            $html .= '    <script src="' . $url . '"></script>' . "\n";
+            array_push($tags, new Tag\Script($url));
         }
 
+        $metas = array_map(fn($tag): string => '    ' . $tag->render(), array_filter($tags));
+
+        $html = '<!DOCTYPE html>' . "\n";
+        $html .= '<html lang="' . $this->language . '">' . "\n";
+        $html .= '<head>' . "\n";
+        $html .= implode("\n", $metas) . "\n";
         $html .= '</head>' . "\n";
+
         return $html;
     }
 }
