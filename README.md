@@ -116,4 +116,4 @@ If you have any questions or possible improvements, we would be delighted to inc
 Visit the Webmonster community [Webmonster](https://webmonster.tech).
 
 # Acknowledgements
-Thanks to : WebplusM, SignedA, Audrey.B, yowaiOtoko
+Thanks to : WebplusM, SignedA, Audrey.B, yowaiOtoko, Moust
